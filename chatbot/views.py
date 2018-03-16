@@ -7,8 +7,11 @@ import json
 import datetime
 from operator import eq
 from .models import parsedmenu
+
 results = parsedmenu.objects.all()
 flag = 0
+classlist = []
+
 def today(results):
 	todaystr = ''
 	now = datetime.datetime.now()
@@ -20,7 +23,7 @@ def today(results):
 	if not todaystr:
 		return isblank(nowDate)
 	else:
-		return todaystr.replace(",", "\n")
+		return todaystr.replace(",", "\n")[:-11]+"\n"+todaystr[-11:]
 
 def tomorrow(results):
 	tomorrowstr = ''
@@ -35,15 +38,11 @@ def tomorrow(results):
 		return isblank(tomorrowDate)
 		flag = 0
 	else:
-		return tomorrowDate.replace(",", "\n")
+		return tomorrowstr.replace(",", "\n")[:-11]+"\n"+tomorrowstr[-11:]
 		flag = 1
 
 def next(results):
 	nextstr = ''
-	now = datetime.datetime.now()
-	nowDate = now.strftime('%Y.%m.%d')
-	tomorrow = now + datetime.timedelta(days=1)
-	tomorrowDate = tomorrow.strftime('%Y.%m.%d')
 	tmp = 9999
 	if flag:
 		return tomorrow(results)
@@ -56,7 +55,7 @@ def next(results):
 	if not nextstr:
 		return isblank()
 	else:
-		return nextstr.replace(",", "\n")
+		return nextstr.replace(",", "\n")[:-11]+"\n"+nextstr[-11:]
 	
 def isblank(cheakDate):
 	cheakstr = ''
@@ -65,14 +64,18 @@ def isblank(cheakDate):
 		cheakstr += "급식이 없습니다."
 	return cheakstr
 
+for i in range(1,4):	
+	for j in range(1,13):
+		classlist.append(str(i)+"-"+str(j))
+
 def keyboard(request):
 	return JsonResponse({
 		"type":"buttons",
 		"buttons":["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정"]
 	})
+
 @csrf_exempt
 def message(request):
-	
 	json_str = (request.body).decode('utf-8')
 	received_json = json.loads(json_str)
 	content_name = received_json['content']
@@ -124,10 +127,11 @@ def message(request):
 	 	},
 	 	"keyboard":{
 			"type":"buttons",
-			"buttons":["1-1","1-2","1-3","1-4","1-5","1-6","1-7","1-8","1-9","1-10","1-11","1-12","2-1","2-2","2-3","2-4","2-5","2-6","2-7","2-8","2-9","2-10","2-11","2-12","3-1","3-2","3-3","3-4","3-5","3-6","3-7","3-8","3-9","3-10","3-11","3-12"]
+			"buttons":classlist
 		 }
 		}
 		)
+
 	elif content_name=="오늘의 학사일정":
 		return JsonResponse(
 		{
@@ -140,6 +144,7 @@ def message(request):
 		 }
 		}
 		)
+
 	else :
 		return JsonResponse(
 		{
@@ -152,4 +157,3 @@ def message(request):
 		 }
 		}
 		)
-
