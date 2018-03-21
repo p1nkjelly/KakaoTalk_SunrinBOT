@@ -9,21 +9,19 @@ from operator import eq
 from .models import parsedmenu
 
 results = parsedmenu.objects.all()
-flag = 0
-classlist = []
 
 def today(results):
 	todaystr = ''
 	now = datetime.datetime.now()
 	nowDate = now.strftime('%Y.%m.%d')
 	for result in results:
-		if(eq(result.day, nowDate)):
+		if(eq(result.day[:-3], nowDate)):
 			todaystr += result.day+'\n'
 			todaystr += result.menu
 	if not todaystr:
 		return isblank(nowDate)
 	else:
-		return todaystr.replace(",", "\n")[:-11]+"\n"+todaystr[-11:]
+		return todaystr
 
 def tomorrow(results):
 	tomorrowstr = ''
@@ -31,31 +29,38 @@ def tomorrow(results):
 	tomorrow = now + datetime.timedelta(days=1)
 	tomorrowDate = tomorrow.strftime('%Y.%m.%d')
 	for result in results:
-		if(eq(result.day, tomorrowDate)):
+		if(eq(result.day[:-3], tomorrowDate)):
 			tomorrowstr += result.day+'\n'
 			tomorrowstr += result.menu
 	if not tomorrowstr:
 		return isblank(tomorrowDate)
-		flag = 0
 	else:
-		return tomorrowstr.replace(",", "\n")[:-11]+"\n"+tomorrowstr[-11:]
-		flag = 1
+		return tomorrowstr
 
 def next(results):
 	nextstr = ''
 	tmp = 9999
-	if flag:
-		return tomorrow(results)
+	now = datetime.datetime.now()
+	tomorrow = now + datetime.timedelta(days=1)
+	tomorrowDate = tomorrow.strftime('%Y.%m.%d')
 	for result in results:
-		if tmp>int(result.day[-2:]):
-			nextstr = ''
-			tmp = int(result.day[-2:])
-			nextstr += result.day+'\n'
-			nextstr += result.menu+'\n'
+		if (eq(result.day[:-3], tomorrowDate)):
+			nextstr += result.day + '\n'
+			nextstr += result.menu
 	if not nextstr:
-		return isblank()
+		for result in results:
+			if tmp > int(result.day[8:-3]):
+				nextstr = ''
+				tmp = int(result.day[8:-3])
+				nextstr += result.day + '\n'
+				nextstr += result.menu
+		if not nextstr:
+			return isblank("DataBase에 저장된")
+		else:
+			return nextstr
 	else:
-		return nextstr.replace(",", "\n")[:-11]+"\n"+nextstr[-11:]
+		return nextstr
+
 	
 def isblank(cheakDate):
 	cheakstr = ''
@@ -64,14 +69,18 @@ def isblank(cheakDate):
 		cheakstr += "급식이 없습니다."
 	return cheakstr
 
+classlist = []
 for i in range(1,4):	
 	for j in range(1,13):
 		classlist.append(str(i)+"-"+str(j))
 
+
+buttons = ["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정","도움말"]
+
 def keyboard(request):
 	return JsonResponse({
 		"type":"buttons",
-		"buttons":["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정"]
+		"buttons":buttons
 	})
 
 @csrf_exempt
@@ -88,7 +97,7 @@ def message(request):
 	 	},
 	 	"keyboard":{
 			"type":"buttons",
-			"buttons":["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정"]
+			"buttons":buttons
 		 }
 		}
 		)
@@ -101,7 +110,7 @@ def message(request):
 	 	},
 	 	"keyboard":{
 			"type":"buttons",
-			"buttons":["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정"]
+			"buttons":buttons
 		 }
 		}
 		)
@@ -114,7 +123,7 @@ def message(request):
 	 	},
 	 	"keyboard":{
 			"type":"buttons",
-			"buttons":["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정"]
+			"buttons":buttons
 		 }
 		}
 		)
@@ -140,8 +149,26 @@ def message(request):
 	 	},
 	 	"keyboard":{
 			"type":"buttons",
-			"buttons":["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정"]
+			"buttons":buttons
 		 }
+		}
+		)
+
+	elif content_name=="도움말":
+		return JsonResponse(
+		{
+		"message":{
+			"text":'''오늘급식 : 오늘의 급식을 보여줍니다.
+내일급식 : 내일의 급식을 보여줍니다.
+다음급식 : 오늘과 내일 급식이 모두 없을 때 그 다음의 급식을 보여줍니다. 내일 급식이 존재한다면 내일 급식을 보여줍니다.
+시간표 : 반별 오늘의 시간표를 보여줍니다.
+오늘의 학사일정 : 오늘 학교에서 시행되는 행사나 일정을 보여줍니다.
+문의 : 정보통신과 20221 정민우'''
+		 },
+		"keyboard":{
+			"type":"buttons",
+			"buttons":buttons
+	 	 }
 		}
 		)
 
@@ -149,11 +176,11 @@ def message(request):
 		return JsonResponse(
 		{
 	 	"message":{
-			"text":"ERROR"
+			"text":"노동중..."
 	 	},
 	 	"keyboard":{
 			"type":"buttons",
-			"buttons":["오늘급식","내일급식","다음급식","시간표","오늘의 학사일정"]
+			"buttons":buttons
 		 }
 		}
 		)
