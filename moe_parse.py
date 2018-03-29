@@ -12,8 +12,9 @@ def parse_menu():
     data = {}
     driver = webdriver.PhantomJS()
     now = datetime.datetime.now()
-    nowDate = now.strftime('%Y.%m.%d')
-    url = ("https://stu.sen.go.kr/sts_sci_md01_001.do?schulCode=B100000658&schulCrseScCode=4&schulKndScCode=04&schMmealScCode=2&schYmd=%s" % (nowDate))
+    parseset = now + datetime.timedelta(days=4)
+    parseDate = parseset.strftime('%Y.%m.%d')
+    url = ("https://stu.sen.go.kr/sts_sci_md01_001.do?domainCode=B10&schulCode=B100000658&schulCrseScCode=4&schulKndScCode=04&schMmealScCode=2&schYmd=%s" % (parseDate))
     driver.get(url)
     html = driver.page_source
     soup = BeautifulSoup(html, 'html.parser')
@@ -31,7 +32,7 @@ def parse_menu():
             element = ""
         date = element
         for i in range(2,4):
-            url2 = ("https://stu.sen.go.kr/sts_sci_md01_001.do?schulCode=B100000658&schulCrseScCode=4&schulKndScCode=04&schMmealScCode=%d&schYmd=%s" % (i, nowDate))
+            url2 = ("https://stu.sen.go.kr/sts_sci_md01_001.do?domainCode=B10&schulCode=B100000658&schulCrseScCode=4&schulKndScCode=04&schMmealScCode=%d&schYmd=%s" % (i, parseDate))
             driver.get(url2)
             html2 = driver.page_source
             soup2 = BeautifulSoup(html2, 'html.parser')
@@ -64,6 +65,5 @@ def parse_menu():
     driver.quit()
 if __name__=='__main__':
     menu_data = parse_menu()
-    parsedmenu.objects.all().delete()
     for d, m in menu_data.items():
         parsedmenu(day=d, menu=m).save()
