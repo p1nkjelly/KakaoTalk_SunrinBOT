@@ -37,10 +37,13 @@ def parse_menu():
             html2 = driver.page_source
             soup2 = BeautifulSoup(html2, 'html.parser')
             element = soup2.find_all("tr")
+            kcal = element[45].find_all('td')
             element = element[2].find_all('td')
             try:
                 element = element[num]
+                kcal = kcal[num]
                 element = str(element)
+                kcal = str(kcal)
                 element = element.replace('[', '')
                 element = element.replace(']', '')
                 element = element.replace('<td class="textC last">', '')
@@ -52,14 +55,20 @@ def parse_menu():
                 element = re.sub(r"\d", "", element)
                 element = element.replace('\n', '')
                 element = element.replace('<br/>', '\n')
+                element = element.replace('amp;', '')
+                kcal = kcal.replace('\n', '')
+                kcal = kcal.replace('<td class="textC">', '')
+                kcal = kcal.replace('</td>', ' Kcal')
             except:
                 element = ""
+                kcal = ""
             if not element:
                 element = "급식이 없습니다.\n"
+                kcal = ""
             if i == 2:
-                menu += "[중식]\n"+element+"\n"
+                menu += "[중식]\n" + element + kcal + "\n\n"
             elif i == 3:
-                menu += "[석식]\n"+element
+                menu += "[석식]\n" + element + kcal
         data[date] = menu
     return data
     driver.quit()

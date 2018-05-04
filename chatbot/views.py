@@ -6,12 +6,8 @@ from django.views.decorators.csrf import csrf_exempt
 import json
 import datetime
 from operator import eq
-from .models import parsedmenu
-from .models import timetable_mon
-from .models import timetable_tue
-from .models import timetable_wed
-from .models import timetable_thu
-from .models import timetable_fri
+from .models import *
+
 results = parsedmenu.objects.all()
 
 def today(results):
@@ -44,14 +40,21 @@ def tomorrow(results):
 def next(results):
     nextstr = ''
     now = datetime.datetime.now()
-    next = now + datetime.timedelta(days=2)
-    nextDate = next.strftime('%Y.%m.%d')
-    for result in results:
-        if(eq(result.day[:-3], nextDate)):
-            nextstr += result.day+'\n'
-            nextstr += result.menu
+    i = 2
+    while(not nextstr and i<8):
+        for result in results:
+            next = now + datetime.timedelta(days=i)
+            nextDate = next.strftime('%Y.%m.%d')
+            if(eq(result.day[:-3], nextDate)):
+                if("급식이 없습니다." in  result.menu):
+                    nextstr = ''
+                else:
+                    nextstr += result.day+'\n'
+                    nextstr += result.menu
+        i += 1
+
     if not nextstr:
-        return isblank(nextDate)
+        return isblank("이번주에 다음")
     else:
         return nextstr
 
@@ -62,10 +65,23 @@ def isblank(cheakDate):
         cheakstr += "급식이 없습니다."
     return cheakstr
 
-def timetable(c_name):
+def addoredituserkey(userkey_add, classdata):
+    try:
+        user_key.objects.filter(key=userkey_add).delete()
+        user_key(key=userkey_add, c_data=classdata).save()
+    except:
+        user_key(key=userkey_add, c_data=classdata).save()
+
+def userinfo(userkey, daynum):
+    for userdata in user_key.objects.filter(key=userkey):
+        if(eq(userdata.key, userkey)):
+            return timetable(userdata.c_data, daynum)
+    return "먼저 학년-반 정보를 등록해주세요."
+
+def timetable(c_name, daynum):
     timetable_str = ''
     t = ['월', '화', '수', '목', '금', '토', '일']
-    r = datetime.datetime.today().weekday()
+    r = datetime.datetime.today().weekday() + daynum
     if t[r] == '월':
         for timetable in timetable_mon.objects.all():
             if(eq(c_name, timetable.c_name)):
@@ -101,7 +117,7 @@ for i in range(1,4):
         classlist.append(str(i)+"-"+str(j))
 
 
-buttons = ["오늘급식","내일급식","다음급식","오늘의 시간표","오늘의 학사일정","도움말"]
+buttons = ["오늘의 급식","오늘의 시간표","내일의 급식","내일의 시간표","다음 급식","오늘의 학사일정","학년-반 정보 등록/변경","도움말"]
 
 def keyboard(request):
     return JsonResponse({
@@ -114,8 +130,9 @@ def message(request):
     json_str = (request.body).decode('utf-8')
     received_json = json.loads(json_str)
     content_name = received_json['content']
+    api_userkey = received_json['user_key']
 
-    if content_name=="오늘급식":
+    if content_name=="오늘의 급식":
         return JsonResponse({
         "message":{
             "text":today(results)
@@ -126,7 +143,7 @@ def message(request):
         }
 		})
 
-    elif content_name=="내일급식":
+    elif content_name=="내일의 급식":
         return JsonResponse({
         "message":{
             "text":tomorrow(results)
@@ -137,7 +154,7 @@ def message(request):
 		}
 		})
 
-    elif content_name=="다음급식":
+    elif content_name=="다음 급식":
         return JsonResponse({
         "message":{
             "text":next(results)
@@ -151,12 +168,22 @@ def message(request):
     elif content_name=="오늘의 시간표":
         return JsonResponse({
         "message":{
-			"text":"학년-반을 선택하세요"
+			"text":userinfo(api_userkey, 0)
 	 	},
         "keyboard":{
             "type":"buttons",
-            "buttons":classlist
+            "buttons":buttons
 		}
+        })
+    elif content_name == "내일의 시간표":
+        return JsonResponse({
+            "message": {
+                "text": userinfo(api_userkey, 1)
+            },
+            "keyboard": {
+                "type": "buttons",
+                "buttons": buttons
+            }
         })
 
     elif content_name=="오늘의 학사일정":
@@ -170,14 +197,28 @@ def message(request):
         }
 	    })
 
+    elif content_name == "학년-반 정보 등록/변경":
+        return JsonResponse({
+            "message": {
+                "text": "자신의 학년-반을 선택하세요."
+            },
+            "keyboard":{
+            "type":"buttons",
+            "buttons":classlist
+		    }
+        })
+
     elif content_name=="도움말":
         return JsonResponse({
         "message":{
             "text":'''오늘급식 : 오늘의 급식을 보여줍니다.
 내일급식 : 내일의 급식을 보여줍니다.
-다음급식 : 2일 후 급식을 보여줍니다.
+다음급식 : 다음 급식이 존재하는 날의 급식을 보여줍니다.
 오늘의 시간표 : 반별 오늘의 시간표를 보여줍니다.
+내일의 시간표 : 반별 내일의 시간표를 보여줍니다.
 오늘의 학사일정 : 오늘 학교에서 시행되는 행사나 일정을 보여줍니다.
+학년-반 정보 등록/변경 : 자신의 학년-반 정보를 서버에 등록합니다.
+시간표 열람을 위해서 최소 1회 등록이 필요하며 이후에도 이 탭에서 변경 가능합니다.
 문의 : 정보통신과 20221 정민우'''
         },
         "keyboard":{
@@ -187,9 +228,10 @@ def message(request):
         })
 
     elif content_name in classlist:
+        addoredituserkey(api_userkey, content_name)
         return JsonResponse({
             "message": {
-                "text":timetable(content_name)
+                "text":"등록되었습니다."
             },
             "keyboard": {
                 "type": "buttons",

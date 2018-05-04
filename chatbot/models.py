@@ -44,3 +44,10 @@ class timetable_fri(models.Model):
 
     def __str__(self):
         return self.c_name
+
+class user_key(models.Model):
+    key = models.CharField(max_length=20, unique=True)
+    c_data = models.CharField(max_length=10)
+
+    def __str__(self):
+        return self.key
