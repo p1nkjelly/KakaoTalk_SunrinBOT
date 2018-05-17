@@ -45,6 +45,13 @@ class timetable_fri(models.Model):
     def __str__(self):
         return self.c_name
 
+class school_cal(models.Model):
+    date = models.CharField(max_length=15)
+    data = models.CharField(max_length=30)
+
+    def __str__(self):
+        return self.date
+
 class user_key(models.Model):
     key = models.CharField(max_length=20, unique=True)
     c_data = models.CharField(max_length=10)
