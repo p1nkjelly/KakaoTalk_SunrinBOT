@@ -1,12 +1,16 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 from django.shortcuts import render
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from json import loads
 import tools
 
-buttons = ["오늘의 급식", "오늘의 시간표", "내일의 급식", "내일의 시간표", "다음 급식", "오늘의 학사일정", "학년-반 정보 등록/변경", "도움말"]
+def index(request):
+    return HttpResponse("<h1>Server Is Alive!</h1>")
+
+
+buttons = ["오늘의 급식", "오늘의 시간표", "내일의 급식", "내일의 시간표", "다음 급식", "학사일정", "학년-반 정보 등록/변경", "도움말"]
 classlist = []
 for i in range(1, 4):
     for j in range(1, 13):
@@ -28,7 +32,7 @@ def message(request):
     if content_name == "오늘의 급식":
         return JsonResponse({
             "message": {
-                "text": tools.today()
+                "text": tools.today_menu()
             },
             "keyboard": {
                 "type": "buttons",
@@ -39,7 +43,7 @@ def message(request):
     elif content_name == "내일의 급식":
         return JsonResponse({
             "message": {
-                "text": tools.tomorrow()
+                "text": tools.tomorrow_menu()
             },
             "keyboard": {
                 "type": "buttons",
@@ -50,7 +54,7 @@ def message(request):
     elif content_name == "다음 급식":
         return JsonResponse({
             "message": {
-                "text": tools.next()
+                "text": tools.next_menu()
             },
             "keyboard": {
                 "type": "buttons",
@@ -79,10 +83,10 @@ def message(request):
             }
         })
 
-    elif content_name == "오늘의 학사일정":
+    elif content_name == "학사일정":
         return JsonResponse({
             "message": {
-                "text": "학사일정 작업중..."
+                "text": tools.school_cal_print()
             },
             "keyboard": {
                 "type": "buttons",
@@ -109,7 +113,7 @@ def message(request):
 다음급식 : 다음 급식이 존재하는 날의 급식을 보여줍니다.
 오늘의 시간표 : 반별 오늘의 시간표를 보여줍니다.
 내일의 시간표 : 반별 내일의 시간표를 보여줍니다.
-오늘의 학사일정 : 오늘 학교에서 시행되는 행사나 일정을 보여줍니다.
+학사일정 : 학교에서 시행되는 행사나 일정을 보여줍니다.
 학년-반 정보 등록/변경 : 자신의 학년-반 정보를 서버에 등록합니다.
 시간표 열람을 위해서 최소 1회 등록이 필요하며 이후에도 이 탭에서 변경 가능합니다.
 문의 : 정보통신과 20221 정민우'''
@@ -142,3 +146,6 @@ def message(request):
                 "buttons": buttons
             }
         })
+
+def whouse(request):
+    return HttpResponse(tools.who_use())

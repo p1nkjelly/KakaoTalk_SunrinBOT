@@ -4,59 +4,68 @@ from operator import eq
 from .models import *
 import datetime
 
-def today():
-    todaystr = ''
+def str_date_return(day, str_type):
     now = datetime.datetime.now()
-    nowDate = now.strftime('%Y.%m.%d')
+    dayinfo = now + datetime.timedelta(days=day)
+    if str_type == 1:
+        DateStr = dayinfo.strftime('%Y.%m.%d')
+    elif str_type == 2:
+        DateStr = dayinfo.strftime('%m-%d')
+    else:
+        DateStr = "error"
+    return DateStr
+
+def day_name_return(shift):
+    day_name = ['월', '화', '수', '목', '금', '토', '일']
+    day_num = datetime.datetime.today().weekday() + shift
+    if day_num >= 7:
+        return day_name[day_num-7]
+    else:
+        return day_name[day_num]
+
+def today_menu():
+    todaystr = ''
+    nowDate = str_date_return(0, 1)
     for result in parsedmenu.objects.filter(day__startswith=nowDate):
         if eq(result.day[:-3], nowDate):
-            todaystr += result.day+'\n'
-            todaystr += result.menu
+            todaystr += result.day+'\n'+result.menu
     if not todaystr:
-        return isblank(nowDate)
+        return isblank(nowDate+"("+day_name_return(0)+")")
     else:
         return todaystr
 
-def tomorrow():
+def tomorrow_menu():
     tomorrowstr = ''
-    now = datetime.datetime.now()
-    tomorrow = now + datetime.timedelta(days=1)
-    tomorrowDate = tomorrow.strftime('%Y.%m.%d')
+    tomorrowDate = str_date_return(1, 1)
     for result in parsedmenu.objects.filter(day__startswith=tomorrowDate):
         if eq(result.day[:-3], tomorrowDate):
-            tomorrowstr += result.day+'\n'
-            tomorrowstr += result.menu
+            tomorrowstr += result.day+'\n'+result.menu
     if not tomorrowstr:
-        return isblank(tomorrowDate)
+        return isblank(tomorrowDate+"("+day_name_return(1)+")")
     else:
         return tomorrowstr
 
-def next():
+def next_menu():
     nextstr = ''
-    now = datetime.datetime.now()
     i = 2
     while not nextstr and i < 8:
-        next = now + datetime.timedelta(days=i)
-        nextDate = next.strftime('%Y.%m.%d')
+        nextDate = str_date_return(i, 1)
         for result in parsedmenu.objects.filter(day__startswith=nextDate):
             if eq(result.day[:-3], nextDate):
-                if "급식이 없습니다." in result.menu:
+                if "[중식]\n급식이 없습니다.\n[석식]\n급식이 없습니다." in result.menu:
                     nextstr = ''
                 else:
-                    nextstr += result.day+'\n'
-                    nextstr += result.menu
+                    nextstr += result.day+'\n'+result.menu
         i += 1
-
     if not nextstr:
         return isblank("이번주에 다음")
     else:
         return nextstr
 
-def isblank(cheakDate):
+def isblank(cheakdate):
     cheakstr = ''
     if not cheakstr:
-        cheakstr += cheakDate+'\n'
-        cheakstr += "급식이 없습니다."
+        cheakstr += cheakdate+'\n'+"급식이 없습니다."
     return cheakstr
 
 def addoredituserkey(userkey_add, classdata):
@@ -74,35 +83,63 @@ def userinfo(userkey, daynum):
 
 def timetable(c_name, daynum):
     timetable_str = ''
-    t = ['월', '화', '수', '목', '금', '토', '일']
-    r = datetime.datetime.today().weekday() + daynum
-    if r == 7:
-        r = 0
-    if t[r] == '월':
-        for timetable in timetable_mon.objects.filter(c_name=c_name):
-            if eq(c_name, timetable.c_name):
-                timetable_str += timetable.c_name+'반 '+t[r]+'요일 시간표\n\n'
-                timetable_str += timetable.t_table
-    elif t[r] == '화':
-        for timetable in timetable_tue.objects.filter(c_name=c_name):
-            if eq(c_name, timetable.c_name):
-                timetable_str += timetable.c_name+'반 '+t[r]+'요일 시간표\n\n'
-                timetable_str += timetable.t_table
-    elif t[r] == '수':
-        for timetable in timetable_wed.objects.filter(c_name=c_name):
-            if eq(c_name, timetable.c_name):
-                timetable_str += timetable.c_name+'반 '+t[r]+'요일 시간표\n\n'
-                timetable_str += timetable.t_table
-    elif t[r] == '목':
-        for timetable in timetable_thu.objects.filter(c_name=c_name):
-            if eq(c_name, timetable.c_name):
-                timetable_str += timetable.c_name+'반 '+t[r]+'요일 시간표\n\n'
-                timetable_str += timetable.t_table
-    elif t[r] == '금':
-        for timetable in timetable_fri.objects.filter(c_name=c_name):
-            if eq(c_name, timetable.c_name):
-                timetable_str += timetable.c_name+'반 '+t[r]+'요일 시간표\n\n'
-                timetable_str += timetable.t_table
+    requested_day_name = day_name_return(daynum)
+    if requested_day_name == '월':
+        for data_timetable_mon in timetable_mon.objects.filter(c_name=c_name):
+            if eq(c_name, data_timetable_mon.c_name):
+                timetable_str += \
+                    data_timetable_mon.c_name + '반 ' + requested_day_name + '요일 시간표\n\n' + data_timetable_mon.t_table
+    elif requested_day_name == '화':
+        for data_timetable_tue in timetable_tue.objects.filter(c_name=c_name):
+            if eq(c_name, data_timetable_tue.c_name):
+                timetable_str += \
+                    data_timetable_tue.c_name + '반 ' + requested_day_name + '요일 시간표\n\n' + data_timetable_tue.t_table
+    elif requested_day_name == '수':
+        for data_timetable_wed in timetable_wed.objects.filter(c_name=c_name):
+            if eq(c_name, data_timetable_wed.c_name):
+                timetable_str += \
+                    data_timetable_wed.c_name + '반 ' + requested_day_name + '요일 시간표\n\n' + data_timetable_wed.t_table
+    elif requested_day_name == '목':
+        for data_timetable_thu in timetable_thu.objects.filter(c_name=c_name):
+            if eq(c_name, data_timetable_thu.c_name):
+                timetable_str += \
+                    data_timetable_thu.c_name + '반 ' + requested_day_name + '요일 시간표\n\n' + data_timetable_thu.t_table
+    elif requested_day_name == '금':
+        for data_timetable_fri in timetable_fri.objects.filter(c_name=c_name):
+            if eq(c_name, data_timetable_fri.c_name):
+                timetable_str += \
+                    data_timetable_fri.c_name + '반 ' + requested_day_name + '요일 시간표\n\n' + data_timetable_fri.t_table
     else:
         timetable_str += "즐거운 주말 보내세요~"
     return timetable_str
+
+def school_cal_print():
+    school_cal_str = ''
+    for i in range(0, 7):
+        Date = str_date_return(i, 2)
+        for cal_data in school_cal.objects.filter(date=Date):
+            if eq(cal_data.date, Date):
+                if not cal_data.data:
+                    school_cal_str += Date[:2]+"월 "+Date[3:]+"일 (" + day_name_return(i) + ")\n" + "학사일정이 없습니다." + "\n"
+                else:
+                    school_cal_str += Date[:2]+"월 "+Date[3:]+"일 (" + day_name_return(i) + ")\n" + cal_data.data + "\n"
+        school_cal_str += "\n"
+    return school_cal_str[:-2]
+
+def who_use():
+    counter = 0
+    total = 0
+    returnstr = ''
+    for i in range(1, 4):
+        for j in range(1, 13):
+            for data in user_key.objects.all():
+                grade = data.c_data[:1]
+                _class = data.c_data[2:]
+                if grade == str(i):
+                    if _class == str(j):
+                        counter += 1
+            returnstr += (str(i) + " - " + str(j) + " : " + str(counter) + "<br>")
+            total += counter
+            counter = 0
+    returnstr += ("total : " + str(total))
+    return returnstr
