@@ -16,7 +16,7 @@ def mon():
     for line in rdr:
         tmp = ''
         for i in range(1,8):
-            tmp += str(i)+"교시 : "+line[i]+"\n"
+            tmp += str(i)+"교시 : "+line[i].replace('\n', ' - ')+"\n"
         data[line[0]] = tmp
     return data
     f.close()
@@ -27,7 +27,7 @@ def tue():
     for line in rdr:
         tmp = ''
         for i in range(1,8):
-            tmp += str(i)+"교시 : "+line[i]+"\n"
+            tmp += str(i)+"교시 : "+line[i].replace('\n', ' - ')+"\n"
         data[line[0]] = tmp
     return data
     f.close()
@@ -38,7 +38,7 @@ def wed():
     for line in rdr:
         tmp = ''
         for i in range(1,8):
-            tmp += str(i)+"교시 : "+line[i]+"\n"
+            tmp += str(i)+"교시 : "+line[i].replace('\n', ' - ')+"\n"
         data[line[0]] = tmp
     return data
     f.close()
@@ -49,7 +49,7 @@ def thu():
     for line in rdr:
         tmp = ''
         for i in range(1,8):
-            tmp += str(i)+"교시 : "+line[i]+"\n"
+            tmp += str(i)+"교시 : "+line[i].replace('\n', ' - ')+"\n"
         data[line[0]] = tmp
     return data
     f.close()
@@ -60,7 +60,7 @@ def fri():
     for line in rdr:
         tmp = ''
         for i in range(1,7):
-            tmp += str(i)+"교시 : "+line[i]+"\n"
+            tmp += str(i)+"교시 : "+line[i].replace('\n', ' - ')+"\n"
         data[line[0]] = tmp
     return data
     f.close()

@@ -63,7 +63,7 @@ def parse_menu():
                 element = ""
                 kcal = ""
             if not element:
-                element = "급식이 없습니다.\n"
+                element = "급식이 없습니다."
                 kcal = ""
             if i == 2:
                 menu += "[중식]\n" + element + kcal + "\n\n"
